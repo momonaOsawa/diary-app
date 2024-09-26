@@ -3,6 +3,10 @@ import { View, StyleSheet, FlatList, Text, TouchableOpacity, Image } from 'react
 import { CalendarList, LocaleConfig } from 'react-native-calendars';
 import { loadDiaryEntries, saveDiaryEntry } from './DiaryDatabase';
 import DiaryEntry from './DiaryEntry'; // DiaryEntry をインポート
+import { Dimensions } from 'react-native';
+
+// スクリーンの幅を取得
+const screenWidth = Dimensions.get('window').width;
 
 // 日本語のローカル設定を追加
 LocaleConfig.locales['jp'] = {
@@ -213,6 +217,7 @@ const HomeScreen = ({ navigation, route }) => {
         markedDates={markedDates}
         horizontal={true}
         pagingEnabled={true}
+        scrollEnabled={true}
         onVisibleMonthsChange={(months) => {
           console.log('onVisibleMonthsChange months:', months); // ログを追加して値を確認
           onMonthChange(months);
@@ -247,7 +252,7 @@ const HomeScreen = ({ navigation, route }) => {
             },
           },
         }}
-        style={styles.calendar} // 動的に高さを設定
+        style={[styles.calendar, { width: screenWidth }]} // 幅を設定
       />
       </View>
       <FlatList
