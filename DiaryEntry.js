@@ -17,11 +17,17 @@ const DiaryEntry = ({ date, text, image }) => {
 
   return (
     <View style={styles.entryContainer}>
+      {/* 上部に年月日と曜日を表示 */}
+      <View style={styles.dateHeader}>
+        <Text style={styles.dateHeaderText}>
+          {moment(date).format('YYYY年MM月DD日(ddd)')}
+        </Text>
+      </View>
       <View style={styles.row}>
         {/* 左側に縦並びで曜日・日付 */}
         <View style={styles.leftColumn}>
-          <Text style={styles.entryDate}>{moment(date).format('YYYY/MM/DD')}</Text>
-          <Text style={styles.entryWeekday}>{moment(date).format('dddd')}</Text>
+          <Text style={styles.entryWeekday}>{moment(date).format('ddd')}</Text>
+          <Text style={styles.entryDate}>{moment(date).format('D')}</Text>
         </View>
 
         {/* 中央に見出し（タイトル）とテキストの最初の行 */}
@@ -50,30 +56,57 @@ const DiaryEntry = ({ date, text, image }) => {
 
 const styles = StyleSheet.create({
   entryContainer: {
-    padding: 15,
-    borderBottomColor: '#ccc',
-    borderBottomWidth: 1,
+    padding: 0,
+    // borderRadius: 10,
+    backgroundColor: '#f8f8f8',
+    // elevation: 2, // Android用の影
+    // shadowColor: '#000', // iOS用の影
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.1,
+    // shadowRadius: 4,
+  },
+  // 上部の年月日と曜日のスタイル
+  dateHeader: {
+   
+    backgroundColor: '#e0e0e0',
+    marginTop: 0, // 上部の余白を0に設定
+    paddingTop: 0, // 上部のパディングを0に設定
+    paddingBottom: 5, // 下部のパディングを少し追加してバランスを取る
+  },
+  dateHeaderText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: 'bold',
+    textAlign: 'flex-start',
+    // margin: 0, // 不要なマージンを排除
+    // padding: 0, // 不要なパディングを排除
+    marginLeft:10
   },
   entryDate: {
+    fontSize: 18, // 日付を大きく表示
     fontWeight: 'bold',
-    color: '#ff6f61',
+    color: '#4db6ac',
+    textAlign: 'center', // 中央揃え
+  },
+  entryWeekday: {
+    fontSize: 14, // 曜日を少し小さく表示
+    color: '#4db6ac',
+    marginBottom: 5,
+    textAlign: 'center', // 中央揃え
   },
   entryImage: {
     width: 80,   // 正方形にするために幅と高さを同じに設定
     height: 80,  // 高さを幅と同じに設定
     marginTop: 10,
   },
-  entryWeekday: {
-    fontSize: 12,
-    color: '#999',
-  },
   row: {
     flexDirection: 'row', // 各項目を横並びに
     alignItems: 'center',
   },
   leftColumn: {
-    width: 80, // 左側の幅を固定
-    alignItems: 'flex-start',
+    width: 60, // 左側の幅を固定
+    alignItems: 'center', // 中央揃えにする
+    justifyContent: 'center', // 上下中央に配置
   },
   centerColumn: {
     flex: 1, // 中央のカラムが幅を最大限に使用するように

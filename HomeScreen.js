@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, FlatList, Text, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, FlatList, Text, TouchableOpacity, Dimensions } from 'react-native';
 import { CalendarList, LocaleConfig } from 'react-native-calendars';
 import { loadDiaryEntries, saveDiaryEntry } from './DiaryDatabase';
-import DiaryEntry from './DiaryEntry'; // DiaryEntry をインポート
-import { Dimensions } from 'react-native';
+import DiaryEntry from './DiaryEntry'; // DiaryEntry をインポート]
+
 
 // スクリーンの幅を取得
 const screenWidth = Dimensions.get('window').width;
@@ -188,6 +188,22 @@ const HomeScreen = ({ navigation, route }) => {
     calendarRef.current?.scrollToMonth(newMonthStr);
   };
 
+   // 月ごとのエントリーを取得
+   const getDiaryEntriesForCurrentMonth = () => {
+    const entriesForMonth = [];
+    Object.keys(diaryEntries).forEach(date => {
+      const [year, month] = date.split('-');
+      if (`${year}-${month}` === currentMonth) {
+        entriesForMonth.push({ date, ...diaryEntries[date] });
+      }
+    });
+    return entriesForMonth;
+  };
+
+  const entriesForCurrentMonth = getDiaryEntriesForCurrentMonth();
+
+
+
   return (
     <View style={styles.container}>
       <View style={styles.calendarHeader}>
@@ -256,17 +272,26 @@ const HomeScreen = ({ navigation, route }) => {
       />
       </View>
       <FlatList
-        data={diaryList}
-        keyExtractor={(item) => item.date}
+        data={entriesForCurrentMonth}
         renderItem={({ item }) => (
-          <DiaryEntry 
+          <DiaryEntry
             date={item.date}
             text={item.text}
             image={item.image}
+            onEdit={() => {
+              const existingText = diaryEntries[item.date]?.text || '';
+              const existingImage = diaryEntries[item.date]?.image || null;
+              navigation.navigate('DiaryEditScreen', { selectedDate: item.date, existingText, existingImage });
+            }}
           />
         )}
-        contentContainerStyle={{ flexGrow: 1 }} // FlatListの高さを調整するために追加
+        keyExtractor={(item) => item.date}
+        contentContainerStyle={styles.listContainer}
+        ListEmptyComponent={
+          <Text style={styles.emptyMessage}>該当月の日記はまだありません。</Text>
+        }
       />
+
     </View>
   );
 };
@@ -331,6 +356,7 @@ const styles = StyleSheet.create({
     height: 200,
     marginTop: 10,
   },
+
 });
 
 export default HomeScreen;
