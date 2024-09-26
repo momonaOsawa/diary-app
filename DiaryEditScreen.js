@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, ScrollView, Image, Alert  } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, ScrollView, Image, Alert, KeyboardAvoidingView  } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { saveDiaryEntry, deleteDiaryEntry } from './DiaryDatabase';
 
@@ -71,7 +71,8 @@ const DiaryEditScreen = ({ route, navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
       <Text style={styles.dateText}>{selectedDate.toString()}</Text> 
       <TextInput
         style={styles.textInput}
@@ -85,19 +86,19 @@ const DiaryEditScreen = ({ route, navigation }) => {
         {selectedImage && <Image source={{ uri: selectedImage }} style={styles.image} resizeMode="contain" />} 
       </View>
       <Button title="画像を選択" onPress={handleImagePick} color="#ff6f61" />
+      </ScrollView>
       <View style={styles.buttonContainer}>
         <Button title="削除" onPress={handleDelete} color="#ff6347" />
         <Button title="保存" onPress={handleSave} color="#ff6f61" />
       </View>
-    </ScrollView>
+      </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  scrollContainer: {
     padding: 20,
-    backgroundColor: '#fff',
+    paddingBottom: 100,  // スクロール時にボタンが見えるように余白を追加
   },
   dateText: {
     fontSize: 18,
@@ -123,7 +124,9 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: '#fff',
   },
 });
 
