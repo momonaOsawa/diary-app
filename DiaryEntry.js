@@ -1,9 +1,21 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import moment from 'moment';
 import 'moment/locale/ja'; // 日本語ロケールの設定
 
-const DiaryEntry = ({ date, text, image }) => {
+const DiaryEntry = ({ date, text, image, onEdit }) => {
+  const [lastTap, setLastTap] = useState(null);
+
+  const handlePress = () => {
+    const currentTime = Date.now();
+    const DOUBLE_TAP_DELAY = 900;
+
+    if (lastTap && (currentTime - lastTap) < DOUBLE_TAP_DELAY) {
+      onEdit(); // ダブルタップ時にonEditを呼び出す
+    } else {
+      setLastTap(currentTime);
+    }
+  };
 
   // テキストを行ごとに分割
   const lines = text.split('\n');
@@ -16,7 +28,8 @@ const DiaryEntry = ({ date, text, image }) => {
   const thirdAndBeyond = lines.length > 2 ? '...' : '';
 
   return (
-    <View style={styles.entryContainer}>
+
+    <TouchableOpacity onPress={handlePress} style={styles.entryContainer}>
       {/* 上部に年月日と曜日を表示 */}
       <View style={styles.dateHeader}>
         <Text style={styles.dateHeaderText}>
@@ -50,7 +63,7 @@ const DiaryEntry = ({ date, text, image }) => {
           </View>
         )}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

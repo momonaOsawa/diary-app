@@ -24,11 +24,15 @@ const HomeScreen = ({ navigation, route }) => {
   const [lastTap, setLastTap] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [calendarHeight, setCalendarHeight] = useState(0);
+  const flatListRef = useRef(null); // FlatListのリファレンス
   const calendarRef = useRef(null);
+  const [entriesForCurrentMonth, setEntriesForCurrentMonth] = useState([]); 
+
 
   useEffect(() => {
     const loadData = async () => {
       const storedEntries = await loadDiaryEntries();
+      console.log('Loaded diary entries:', storedEntries); // ここを確認
       setDiaryEntries(storedEntries);
     };
     loadData();
@@ -62,6 +66,24 @@ const HomeScreen = ({ navigation, route }) => {
     }
   }, [route.params?.newEntry]);
 
+  useEffect(() => {
+    const entriesForMonth = getDiaryEntriesForCurrentMonth();
+    setEntriesForCurrentMonth(entriesForMonth);
+  }, [currentMonth, diaryEntries]);
+
+  useEffect(() => {
+    // selectedDateが変更されたときにFlatListをスクロール
+    const index = entriesForCurrentMonth.findIndex(entry => entry.date === selectedDate);
+    if (index >= 0 && flatListRef.current) {
+      flatListRef.current.scrollToIndex({
+        index, 
+        animated: true,
+        viewPosition: 0, // アイテムがリストの上部に来るように設定
+      });
+    }
+  }, [selectedDate, entriesForCurrentMonth]);
+
+
    // カレンダーの日付が押された時の処理
   const onDayPress = (day) => {
     const currentTime = Date.now();
@@ -75,6 +97,18 @@ const HomeScreen = ({ navigation, route }) => {
     } else {
       setSelectedDate(day.dateString);
       setLastTap(currentTime);
+
+    // 日付に対応するインデックスを取得し、FlatListをスクロール
+    const index = entriesForCurrentMonth.findIndex(entry => entry.date === day.dateString);
+    
+    if (index >= 0 && flatListRef.current) {
+      flatListRef.current.scrollToIndex({
+        index, 
+        animated: true,
+        viewPosition: 0, // アイテムがリストの上部に来るように設定
+      });
+    }
+      
     }
   };
 
@@ -136,14 +170,6 @@ const HomeScreen = ({ navigation, route }) => {
   };
   
 
-
-  
-
-  const diaryList = selectedDate in diaryEntries
-  ? [{ date: selectedDate, text: diaryEntries[selectedDate]?.text || '', image: diaryEntries[selectedDate]?.image || null }]  // 画像が無い場合は null を設定
-  : [];
-  
-
   const markedDates = {
     ...Object.keys(diaryEntries).reduce((acc, date) => {
       acc[date] = { marked: true, dotColor: 'pink' };
@@ -197,10 +223,10 @@ const HomeScreen = ({ navigation, route }) => {
         entriesForMonth.push({ date, ...diaryEntries[date] });
       }
     });
+    // 日付順にソート
+    entriesForMonth.sort((a, b) => new Date(a.date) - new Date(b.date));
     return entriesForMonth;
   };
-
-  const entriesForCurrentMonth = getDiaryEntriesForCurrentMonth();
 
 
 
@@ -272,6 +298,7 @@ const HomeScreen = ({ navigation, route }) => {
       />
       </View>
       <FlatList
+        ref={flatListRef}
         data={entriesForCurrentMonth}
         renderItem={({ item }) => (
           <DiaryEntry
@@ -290,6 +317,19 @@ const HomeScreen = ({ navigation, route }) => {
         ListEmptyComponent={
           <Text style={styles.emptyMessage}>該当月の日記はまだありません。</Text>
         }
+        getItemLayout={(data, index) => {
+          const itemHeight = data[index].image ? 400 : 200; // 画像がある場合は高さを変える
+          return { length: itemHeight, offset: itemHeight * index, index };
+        }}
+        onScrollToIndexFailed={(info) => {
+          const offset = info.averageItemLength * info.index;
+          flatListRef.current?.scrollToOffset({ offset, animated: true });
+          setTimeout(() => {
+            if (flatListRef.current) {
+              flatListRef.current.scrollToEnd({ index: info.index, animated: true });
+            }
+          }, 100);
+        }}
       />
 
     </View>
@@ -332,13 +372,6 @@ const styles = StyleSheet.create({
     borderWidth: 0, // カレンダーのボーダーを削除
     backgroundColor: "#fff",
   },
-  // calendar: {
-  //   borderWidth: 1,
-  //   borderColor: '#e0e0e0',
-  //   borderRadius: 10,
-  //   padding: 0,
-  //   backgroundColor: "#fff",
-  // },
   flatList: {
     flex: 1, // `FlatList` が空きスペースを埋めるようにする
   },
@@ -356,7 +389,10 @@ const styles = StyleSheet.create({
     height: 200,
     marginTop: 10,
   },
-
+  emptyMessage:{
+    textAlign: 'center', // 中央揃え
+    paddingTop: 30
+  }
 });
 
 export default HomeScreen;
