@@ -18,7 +18,7 @@ const DiaryEntry = ({ date, text, image, onEdit }) => {
   };
 
   // テキストを行ごとに分割
-  const lines = text.split('\n');
+  const lines = (text || '').split('\n'); // textがundefinedの場合は空文字列を使う
   
   // 1行目と2行目を取得
   const firstLine = lines[0] || 'タイトルなし';
@@ -79,12 +79,12 @@ const styles = StyleSheet.create({
     // shadowRadius: 4,
   },
   // 上部の年月日と曜日のスタイル
-  dateHeader: {
-   
+  dateHeader: {  
     backgroundColor: '#e0e0e0',
     marginTop: 0, // 上部の余白を0に設定
     paddingTop: 0, // 上部のパディングを0に設定
     paddingBottom: 5, // 下部のパディングを少し追加してバランスを取る
+    paddingVertical: 5, // 上下のパディングを追加
   },
   dateHeaderText: {
     fontSize: 16,
@@ -110,7 +110,8 @@ const styles = StyleSheet.create({
   entryImage: {
     width: 80,   // 正方形にするために幅と高さを同じに設定
     height: 80,  // 高さを幅と同じに設定
-    marginTop: 10,
+    justifyContent: 'center', // 上下中央に配置
+    alignItems: 'center',
   },
   row: {
     flexDirection: 'row', // 各項目を横並びに
@@ -119,7 +120,6 @@ const styles = StyleSheet.create({
   leftColumn: {
     width: 60, // 左側の幅を固定
     alignItems: 'center', // 中央揃えにする
-    justifyContent: 'center', // 上下中央に配置
   },
   centerColumn: {
     flex: 1, // 中央のカラムが幅を最大限に使用するように
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
   entryTitle: {
     fontWeight: 'bold',
-    fontSize: 20,
+    fontSize: 16,
     marginBottom: 5,
   },
   entryPreview: {

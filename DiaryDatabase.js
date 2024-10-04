@@ -33,7 +33,7 @@ export const saveDiaryEntry = async (date, entryData) => {
     const diaryEntries = storedEntries ? JSON.parse(storedEntries) : {};
     
      // entryData にテキストが正しく含まれているか確認
-     diaryEntries[date] = { text: entryData.text, image: imagePath }; // 画像パスを保存
+     diaryEntries[date] = { text: entryData.text || '', image: imagePath }; // 画像パスを保存
      await AsyncStorage.setItem('diaryEntries', JSON.stringify(diaryEntries));
      console.log("保存できました。");
    } catch (error) {

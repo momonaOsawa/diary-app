@@ -31,7 +31,7 @@ const DiaryEditScreen = ({ route, navigation }) => {
     }
 
     const entryData = {
-      text: entryText,
+      text: entryText || '',  // テキストがない場合は空文字を保存
       image: selectedImage,
     };
 

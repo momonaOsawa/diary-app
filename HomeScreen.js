@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, FlatList, Text, TouchableOpacity, Dimensions } from 'react-native';
 import { CalendarList, LocaleConfig } from 'react-native-calendars';
 import { loadDiaryEntries, saveDiaryEntry } from './DiaryDatabase';
-import DiaryEntry from './DiaryEntry'; // DiaryEntry をインポート]
+import DiaryEntry from './DiaryEntry'; // DiaryEntry をインポート
+import DatePickerModal from './DatePickerModal'; // モーダルコンポーネントをインポート
 
 
 // スクリーンの幅を取得
@@ -20,6 +21,7 @@ LocaleConfig.defaultLocale = 'jp';
 
 const HomeScreen = ({ navigation, route }) => {
   const [diaryEntries, setDiaryEntries] = useState({});
+
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().split('T')[0].slice(0, 7));
   const [lastTap, setLastTap] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -27,13 +29,15 @@ const HomeScreen = ({ navigation, route }) => {
   const flatListRef = useRef(null); // FlatListのリファレンス
   const calendarRef = useRef(null);
   const [entriesForCurrentMonth, setEntriesForCurrentMonth] = useState([]); 
+  const [modalVisible, setModalVisible] = useState(false); // モーダルの表示状態
 
 
   useEffect(() => {
     const loadData = async () => {
       const storedEntries = await loadDiaryEntries();
       console.log('Loaded diary entries:', storedEntries); // ここを確認
-      setDiaryEntries(storedEntries);
+      const safeEntries = storedEntries || {};
+      setDiaryEntries(safeEntries);
     };
     loadData();
   }, []);
@@ -49,12 +53,6 @@ const HomeScreen = ({ navigation, route }) => {
   useEffect(() => {
     if (route.params?.newEntry) {
       const { date, text, image } = route.params.newEntry;
-      
-      // データ構造を確認し、不足しているフィールドがないかチェック
-      if (!date || !text) {
-        console.error('Invalid entry data: date or text is missing');
-        return;
-      }
   
       const updatedEntries = { 
         ...diaryEntries, 
@@ -76,12 +74,26 @@ const HomeScreen = ({ navigation, route }) => {
     const index = entriesForCurrentMonth.findIndex(entry => entry.date === selectedDate);
     if (index >= 0 && flatListRef.current) {
       flatListRef.current.scrollToIndex({
-        index, 
-        animated: true,
-        viewPosition: 0, // アイテムがリストの上部に来るように設定
+          index, 
+          animated: true,
+          viewPosition: 0, // アイテムがリストの上部に来るように設定
       });
+    } else {
+        // 最下部のデータも表示するようにする
+        const lastIndex = entriesForCurrentMonth.length - 1; // 最後のインデックスを取得
+        if (lastIndex >= 0) {
+            flatListRef.current.scrollToIndex({
+                index: lastIndex,
+                animated: true,
+                viewPosition: 0, // 最上部に表示
+            });
+        }
     }
   }, [selectedDate, entriesForCurrentMonth]);
+
+  // 現在の年と月を取得
+  const currentYear = new Date().getFullYear(); // 現在の年
+  const currentMonthNumber = new Date().getMonth() + 1; // 現在の月（0から始まるため1を足す
 
 
    // カレンダーの日付が押された時の処理
@@ -100,6 +112,7 @@ const HomeScreen = ({ navigation, route }) => {
 
     // 日付に対応するインデックスを取得し、FlatListをスクロール
     const index = entriesForCurrentMonth.findIndex(entry => entry.date === day.dateString);
+    
     
     if (index >= 0 && flatListRef.current) {
       flatListRef.current.scrollToIndex({
@@ -228,19 +241,60 @@ const HomeScreen = ({ navigation, route }) => {
     return entriesForMonth;
   };
 
+  const handleTodayPress = () => {
+    // 今日の日付をセットしてカレンダーをリセット
+    const today = new Date().toISOString().split('T')[0];
+    setSelectedDate(today); // 選択された日付を今日に設定
+    setCurrentMonth(today.slice(0, 7)); // 現在の月を今日の月に設定
+    calendarRef.current?.scrollToMonth(today); // カレンダーを今日の月にスクロール
 
+    // 今日の日記のエントリーにスクロール
+    const index = entriesForCurrentMonth.findIndex(entry => entry.date === today);
+    if (index >= 0 && flatListRef.current) {
+      flatListRef.current.scrollToIndex({
+        index, 
+        animated: true,
+        viewPosition: 0, // アイテムがリストの上部に来るように設定
+      });
+    }
+  };
 
+  const handleMonthYearPress = () => {
+    setModalVisible(true);
+  };
+
+  const handleConfirmDate = (year, month) => {
+    const newMonthStr = `${year}-${String(month).padStart(2, '0')}`;
+    setCurrentMonth(newMonthStr);
+    calendarRef.current?.scrollToMonth(newMonthStr); // カレンダーを新しい月にスクロール
+  };
+
+  
   return (
     <View style={styles.container}>
       <View style={styles.calendarHeader}>
         <TouchableOpacity onPress={handlePreviousMonth} style={styles.arrowButton}>
           <Text style={styles.arrowText}>{"<"}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerText}>{currentMonth.replace('-', '/')}</Text>
+        <TouchableOpacity onPress={handleMonthYearPress}>
+          <Text style={styles.headerText}>{currentMonth.replace('-', '/')}</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={handleNextMonth} style={styles.arrowButton}>
           <Text style={styles.arrowText}>{">"}</Text>
         </TouchableOpacity>
+        {/* ここに今日ボタンを追加 */}
+        <TouchableOpacity onPress={handleTodayPress} style={styles.todayButton}>
+          <Text style={styles.todayText}>今日</Text>
+        </TouchableOpacity>
       </View>
+      {/* 日付選択モーダル */}
+      <DatePickerModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onConfirm={handleConfirmDate}
+        currentYear={currentYear}
+        currentMonth={parseInt(currentMonth.split('-')[1])} // ここで現在の月を整数として渡す
+      />
       <View
         style={styles.calendarWrapper}
         onLayout={(event) => {
@@ -255,13 +309,25 @@ const HomeScreen = ({ navigation, route }) => {
       >
       <CalendarList
         ref={calendarRef}
+        current={currentMonth}  // 現在の月を反映
         onDayPress={onDayPress}
         markedDates={markedDates}
         horizontal={true}
+        pastScrollRange={300} // 過去1年分
+        futureScrollRange={1000} // 未来1年分
+        minDate={'2000-01-01'}  // 最も古い日付を指定（無制限にしたい場合、古い日付を設定）
+        maxDate={'2100-12-31'}  // 最も未来の日付を指定（無制限にしたい場合、未来の日付を設定）
         pagingEnabled={true}
         scrollEnabled={true}
         onVisibleMonthsChange={(months) => {
-          console.log('onVisibleMonthsChange months:', months); // ログを追加して値を確認
+          const currentMonth = months[0].dateString;
+          if (currentMonth < '2000-01-01' || currentMonth > '2100-12-31') {
+            Alert.alert(
+              '範囲外です',
+              'これ以上先の月には移動できません。指定された範囲内で操作をお願いします。',
+              [{ text: 'OK', onPress: () => console.log('OK Pressed') }]
+            );
+          }
           onMonthChange(months);
         }}
         showSixWeeks={false}
@@ -317,10 +383,6 @@ const HomeScreen = ({ navigation, route }) => {
         ListEmptyComponent={
           <Text style={styles.emptyMessage}>該当月の日記はまだありません。</Text>
         }
-        getItemLayout={(data, index) => {
-          const itemHeight = data[index].image ? 400 : 200; // 画像がある場合は高さを変える
-          return { length: itemHeight, offset: itemHeight * index, index };
-        }}
         onScrollToIndexFailed={(info) => {
           const offset = info.averageItemLength * info.index;
           flatListRef.current?.scrollToOffset({ offset, animated: true });
@@ -355,11 +417,23 @@ const styles = StyleSheet.create({
   },
   arrowButton: {
     padding: 5,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#fff',
     borderRadius: 10,
   },
   arrowText: {
     fontSize: 20,
+    fontWeight: 'bold',
+  },
+  todayButton:{
+    position: 'absolute', // 絶対位置に設定
+    right: 20, // 右からの距離
+    padding: 5,
+    backgroundColor: '#fff',
+    justifyContent:'flex-end',
+  },
+  todayText:{
+    fontSize:16,
+    fontWeight: 'bold',
   },
   calendarWrapper: {
     borderWidth: 1,
@@ -374,6 +448,7 @@ const styles = StyleSheet.create({
   },
   flatList: {
     flex: 1, // `FlatList` が空きスペースを埋めるようにする
+    flexGrow: 1,
   },
   entryContainer: {
     padding: 15,
