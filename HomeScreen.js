@@ -97,7 +97,7 @@ const HomeScreen = ({ navigation, route }) => {
 
 
    // カレンダーの日付が押された時の処理
-  const onDayPress = (day) => {
+   const onDayPress = (day) => {
     const currentTime = Date.now();
     const DOUBLE_TAP_DELAY = 900;
   
@@ -238,9 +238,10 @@ const HomeScreen = ({ navigation, route }) => {
     });
     // 日付順にソート
     entriesForMonth.sort((a, b) => new Date(a.date) - new Date(b.date));
-    return entriesForMonth;
+    
+    return entriesForMonth; // 空の場合も考慮して、配列を返す
   };
-
+  
   const handleTodayPress = () => {
     // 今日の日付をセットしてカレンダーをリセット
     const today = new Date().toISOString().split('T')[0];
@@ -400,7 +401,6 @@ const HomeScreen = ({ navigation, route }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop:50,
     flex: 1,
     backgroundColor: '#fff',
   },
