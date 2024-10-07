@@ -4,6 +4,7 @@ import { CalendarList, LocaleConfig } from 'react-native-calendars';
 import { loadDiaryEntries, saveDiaryEntry } from './DiaryDatabase';
 import DiaryEntry from './DiaryEntry'; // DiaryEntry をインポート
 import DatePickerModal from './DatePickerModal'; // モーダルコンポーネントをインポート
+import _ from 'lodash';  // lodashをインポート
 
 
 // スクリーンの幅を取得
@@ -270,6 +271,20 @@ const HomeScreen = ({ navigation, route }) => {
     calendarRef.current?.scrollToMonth(newMonthStr); // カレンダーを新しい月にスクロール
   };
 
+  // onVisibleMonthsChange のデバウンス処理
+  const debouncedOnVisibleMonthsChange = useRef(
+    _.debounce((months) => {
+      console.log('Debounced onVisibleMonthsChange:', months);
+      onMonthChange(months); // 既存の onMonthChange を呼び出す
+    }, 500) // 500ms の遅延を設定
+  ).current;
+
+  useEffect(() => {
+    return () => {
+      debouncedOnVisibleMonthsChange.cancel(); // コンポーネントがアンマウントされるときにデバウンスをクリア
+    };
+  }, []);
+
   
   return (
     <View style={styles.container}>
@@ -320,6 +335,7 @@ const HomeScreen = ({ navigation, route }) => {
         maxDate={'2100-12-31'}  // 最も未来の日付を指定（無制限にしたい場合、未来の日付を設定）
         pagingEnabled={true}
         scrollEnabled={true}
+        disableMonthChange={true}  // 月変更時の過剰な再レンダリングを防止
         onVisibleMonthsChange={(months) => {
           const currentMonth = months[0].dateString;
           if (currentMonth < '2000-01-01' || currentMonth > '2100-12-31') {
@@ -329,7 +345,8 @@ const HomeScreen = ({ navigation, route }) => {
               [{ text: 'OK', onPress: () => console.log('OK Pressed') }]
             );
           }
-          onMonthChange(months);
+          debouncedOnVisibleMonthsChange(months); // デバウンス処理を呼び出す
+         
         }}
         showSixWeeks={false}
         theme={{
@@ -367,6 +384,7 @@ const HomeScreen = ({ navigation, route }) => {
       <FlatList
         ref={flatListRef}
         data={entriesForCurrentMonth}
+        removeClippedSubviews={true}  // 画面外にスクロールされたアイテムのレンダリングを解除
         renderItem={({ item }) => (
           <DiaryEntry
             date={item.date}
