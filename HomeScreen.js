@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, FlatList, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { View, StyleSheet, FlatList, Text, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { CalendarList, LocaleConfig } from 'react-native-calendars';
 import { loadDiaryEntries, saveDiaryEntry } from './DiaryDatabase';
 import DiaryEntry from './DiaryEntry'; // DiaryEntry をインポート
@@ -239,7 +239,6 @@ const HomeScreen = ({ navigation, route }) => {
     });
     // 日付順にソート
     entriesForMonth.sort((a, b) => new Date(a.date) - new Date(b.date));
-    
     return entriesForMonth; // 空の場合も考慮して、配列を返す
   };
   
@@ -342,7 +341,10 @@ const HomeScreen = ({ navigation, route }) => {
             Alert.alert(
               '範囲外です',
               'これ以上先の月には移動できません。指定された範囲内で操作をお願いします。',
-              [{ text: 'OK', onPress: () => console.log('OK Pressed') }]
+              [{ text: 'OK', onPress: () => {
+                // スクロールを元の月に戻す
+                calendarRef.current.scrollToMonth(currentMonth < '2000-01-01' ? '2000-01' : '2100-12');
+              }}]
             );
           }
           debouncedOnVisibleMonthsChange(months); // デバウンス処理を呼び出す
@@ -419,6 +421,7 @@ const HomeScreen = ({ navigation, route }) => {
 
 const styles = StyleSheet.create({
   container: {
+    marginTop:50,
     flex: 1,
     backgroundColor: '#fff',
   },
