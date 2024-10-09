@@ -1,6 +1,6 @@
-import React from 'react';
+import React from 'react'; 
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import DialPicker from './component/DialPicker';
 
 const DatePickerModal = ({ visible, onClose, onConfirm, currentYear, currentMonth }) => {
   const [selectedYear, setSelectedYear] = React.useState(currentYear);
@@ -10,6 +10,7 @@ const DatePickerModal = ({ visible, onClose, onConfirm, currentYear, currentMont
   const years = Array.from({ length: 101 }, (_, i) => String(2000 + i)); // 2000年から2100年まで
   const months = Array.from({ length: 12 }, (_, i) => String(i + 1)); // 1月から12月
 
+  // モーダルが表示されたときに選択された年と月を更新
   React.useEffect(() => {
     if (visible) {
       // モーダルが表示されるたびに、selectedYear と selectedMonth を currentYear と currentMonth に設定
@@ -34,22 +35,22 @@ const DatePickerModal = ({ visible, onClose, onConfirm, currentYear, currentMont
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>年月を選択</Text>
           <View style={styles.pickerWrapper}>
-            <Picker
+            <DialPicker
+              items={years}
               selectedValue={selectedYear}
-              style={styles.picker}
-              onValueChange={(itemValue) => setSelectedYear(itemValue)}>
-              {years.map((year) => (
-                <Picker.Item key={year} label={year} value={year} />
-              ))}
-            </Picker>
-            <Picker
+              onValueChange={(itemValue) => {
+                console.log(`Selected Year: ${itemValue}です。`); // 追加
+                setSelectedYear(itemValue);
+              }}
+            />
+            <DialPicker
+              items={months}
               selectedValue={selectedMonth}
-              style={styles.picker}
-              onValueChange={(itemValue) => setSelectedMonth(itemValue)}>
-              {months.map((month) => (
-                <Picker.Item key={month} label={month} value={month} />
-              ))}
-            </Picker>
+              onValueChange={(itemValue) => {
+                console.log(`Selected Month: ${itemValue}です。`); // 追加
+                setSelectedMonth(itemValue);
+              }}
+            />
           </View>
           <View style={styles.buttonContainer}>
             <TouchableOpacity onPress={onClose} style={styles.button}>
@@ -78,7 +79,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
+    width: '85%',
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 20,
@@ -90,11 +91,7 @@ const styles = StyleSheet.create({
   },
   pickerWrapper: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  picker: {
-    flex: 1,
-    height: 50,
+    justifyContent: 'space-evenly',
   },
   buttonContainer: {
     flexDirection: 'row',

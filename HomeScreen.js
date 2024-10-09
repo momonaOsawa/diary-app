@@ -32,11 +32,10 @@ const HomeScreen = ({ navigation, route }) => {
   const [entriesForCurrentMonth, setEntriesForCurrentMonth] = useState([]); 
   const [modalVisible, setModalVisible] = useState(false); // モーダルの表示状態
 
-
   useEffect(() => {
     const loadData = async () => {
       const storedEntries = await loadDiaryEntries();
-      console.log('Loaded diary entries:', storedEntries); // ここを確認
+      console.log('Loaded diary entries:', storedEntries);
       const safeEntries = storedEntries || {};
       setDiaryEntries(safeEntries);
     };
@@ -66,35 +65,39 @@ const HomeScreen = ({ navigation, route }) => {
   }, [route.params?.newEntry]);
 
   useEffect(() => {
-    const entriesForMonth = getDiaryEntriesForCurrentMonth();
+    const entriesForMonth = getDiaryEntriesForCurrentMonth(diaryEntries);
     setEntriesForCurrentMonth(entriesForMonth);
   }, [currentMonth, diaryEntries]);
 
   useEffect(() => {
-    // selectedDateが変更されたときにFlatListをスクロール
-    const index = entriesForCurrentMonth.findIndex(entry => entry.date === selectedDate);
-    if (index >= 0 && flatListRef.current) {
-      flatListRef.current.scrollToIndex({
+    if (entriesForCurrentMonth.length > 0) {  // データが空でないことを確認
+      const today = new Date().toISOString().split('T')[0]; // 今日の日付を取得
+      if (selectedDate === today) { // 選択された日付が今日の場合
+        const index = entriesForCurrentMonth.findIndex(entry => entry.date === today);
+        if (index >= 0 && flatListRef.current) {
+          flatListRef.current.scrollToIndex({
+            index, 
+            animated: true,
+            viewPosition: 0, // アイテムがリストの上部に来るように設定
+          });
+          return; // スクロールしたら、他の処理をスキップ
+        }
+      }
+  
+      const index = entriesForCurrentMonth.findIndex(entry => entry.date === selectedDate);
+      if (index >= 0 && flatListRef.current) {
+        flatListRef.current.scrollToIndex({
           index, 
           animated: true,
           viewPosition: 0, // アイテムがリストの上部に来るように設定
-      });
-    } else {
-        // 最下部のデータも表示するようにする
-        const lastIndex = entriesForCurrentMonth.length - 1; // 最後のインデックスを取得
-        if (lastIndex >= 0) {
-            flatListRef.current.scrollToIndex({
-                index: lastIndex,
-                animated: true,
-                viewPosition: 0, // 最上部に表示
-            });
-        }
+        });
+      } else {
+        const firstIndex = 0; // 月初めのデータ
+        flatListRef.current?.scrollToIndex({ index: firstIndex, animated: true, viewPosition: 0 });
+      }
     }
   }, [selectedDate, entriesForCurrentMonth]);
-
-  // 現在の年と月を取得
-  const currentYear = new Date().getFullYear(); // 現在の年
-  const currentMonthNumber = new Date().getMonth() + 1; // 現在の月（0から始まるため1を足す
+  
 
 
    // カレンダーの日付が押された時の処理
@@ -265,10 +268,18 @@ const HomeScreen = ({ navigation, route }) => {
   };
 
   const handleConfirmDate = (year, month) => {
+    console.log(`Confirmed year: ${year}, month: ${month}`);  // ここで選択された年と月を確認
     const newMonthStr = `${year}-${String(month).padStart(2, '0')}`;
     setCurrentMonth(newMonthStr);
-    calendarRef.current?.scrollToMonth(newMonthStr); // カレンダーを新しい月にスクロール
-  };
+    // 選択された月の初日の文字列を生成
+    const selectedDateString = `${year}-${String(month).padStart(2, '0')}-01`; // 1日を選択する場合
+
+    // 選択された日付を設定
+    setSelectedDate(selectedDateString);
+
+    // カレンダーを新しい月にスクロール
+    calendarRef.current?.scrollToMonth(newMonthStr);
+};
 
   // onVisibleMonthsChange のデバウンス処理
   const debouncedOnVisibleMonthsChange = useRef(
@@ -307,8 +318,8 @@ const HomeScreen = ({ navigation, route }) => {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onConfirm={handleConfirmDate}
-        currentYear={currentYear}
-        currentMonth={parseInt(currentMonth.split('-')[1])} // ここで現在の月を整数として渡す
+        currentYear={parseInt(currentMonth.split('-')[0])} 
+        currentMonth={parseInt(currentMonth.split('-')[1])} // 修正後の現在の月を渡す
       />
       <View
         style={styles.calendarWrapper}
@@ -421,7 +432,7 @@ const HomeScreen = ({ navigation, route }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop:50,
+    // marginTop:50,
     flex: 1,
     backgroundColor: '#fff',
   },
