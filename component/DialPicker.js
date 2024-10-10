@@ -114,7 +114,7 @@ const createStyles = (itemHeight) => StyleSheet.create({
     position: 'relative',
   },
   scrollViewContent: {
-    justifyContent: 'center', // スクロールビュー内のアイテムを中央に配置
+    alignItems: 'center', // スクロールビュー内のアイテムを中央に配置
   },
   itemContainer: {
     height: itemHeight,  // アイテムの高さを設定
@@ -124,20 +124,21 @@ const createStyles = (itemHeight) => StyleSheet.create({
   },
   item: {
     // height: itemHeight,  // アイテムの高さ
-    fontSize: 22,
+    fontSize: 19,
     textAlign: 'center',
     color: '#333',
     opacity: 0.6,
     paddingHorizontal: 20,  // 横方向のパディングを追加してスクロールしやすくする
+    width:120,
   },
   selectedItem: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#000',
     opacity: 1,
   },
   unselectedItem: {
-    fontSize: 22,
+    fontSize: 19,
     color: '#666',
     opacity: 0.4,
   },
@@ -146,14 +147,14 @@ const createStyles = (itemHeight) => StyleSheet.create({
     left: 0,
     right: 0,
     top: '50%',  // 中央に基づいて配置
-    transform: [{ translateY: -(itemHeight / 2) + 1 }], // 微調整
+    transform: [{ translateY: -(itemHeight / 2)  }], // 微調整
     justifyContent: 'center',  // ラインを中央に配置
     height: itemHeight, // ラインコンテナの高さ
   },
   line: {
     height: 1,
     backgroundColor: '#000',  // ラインの色
-    width: '100%',
+    width: 120,
   },
   topLine: {
     position: 'absolute',

@@ -33,7 +33,6 @@ const DatePickerModal = ({ visible, onClose, onConfirm, currentYear, currentMont
     <Modal transparent={true} visible={visible} animationType="slide">
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>年月を選択</Text>
           <View style={styles.pickerWrapper}>
             <DialPicker
               items={years}
@@ -83,11 +82,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 20,
-  },
-  modalTitle: {
-    fontSize: 20,
-    marginBottom: 10,
-    textAlign: 'center',
   },
   pickerWrapper: {
     flexDirection: 'row',
