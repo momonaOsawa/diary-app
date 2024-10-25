@@ -22,7 +22,6 @@ LocaleConfig.defaultLocale = 'jp';
 
 const HomeScreen = ({ navigation, route }) => {
   const [diaryEntries, setDiaryEntries] = useState({});
-
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().split('T')[0].slice(0, 7));
   const [lastTap, setLastTap] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -31,6 +30,7 @@ const HomeScreen = ({ navigation, route }) => {
   const calendarRef = useRef(null);
   const [entriesForCurrentMonth, setEntriesForCurrentMonth] = useState([]); 
   const [modalVisible, setModalVisible] = useState(false); // モーダルの表示状態
+  const [screenCount, setScreenCount] = useState(0); 
 
   useEffect(() => {
     const loadData = async () => {
@@ -75,6 +75,7 @@ const HomeScreen = ({ navigation, route }) => {
       if (selectedDate === today) { // 選択された日付が今日の場合
         const index = entriesForCurrentMonth.findIndex(entry => entry.date === today);
         if (index >= 0 && flatListRef.current) {
+          console.log(flatListRef.current.scrollToIndex)
           flatListRef.current.scrollToIndex({
             index, 
             animated: true,
@@ -82,6 +83,7 @@ const HomeScreen = ({ navigation, route }) => {
           });
           return; // スクロールしたら、他の処理をスキップ
         }
+        console.log("Today's entry not found in current month entries.");
       }
   
       const index = entriesForCurrentMonth.findIndex(entry => entry.date === selectedDate);
@@ -105,6 +107,7 @@ const HomeScreen = ({ navigation, route }) => {
     const currentTime = Date.now();
     const DOUBLE_TAP_DELAY = 900;
   
+    console.log(selectedDate)
     if (lastTap && (currentTime - lastTap) < DOUBLE_TAP_DELAY && selectedDate === day.dateString) {
       const existingText = diaryEntries[day.dateString]?.text || '';
       const existingImage = diaryEntries[day.dateString]?.image || null; // 画像を取得
@@ -113,21 +116,45 @@ const HomeScreen = ({ navigation, route }) => {
     } else {
       setSelectedDate(day.dateString);
       setLastTap(currentTime);
-
-    // 日付に対応するインデックスを取得し、FlatListをスクロール
-    const index = entriesForCurrentMonth.findIndex(entry => entry.date === day.dateString);
-    
-    
-    if (index >= 0 && flatListRef.current) {
-      flatListRef.current.scrollToIndex({
-        index, 
-        animated: true,
-        viewPosition: 0, // アイテムがリストの上部に来るように設定
-      });
-    }
-      
+  
+      // 選択された日付のインデックスを探す
+      const index = entriesForCurrentMonth.findIndex(entry => entry.date === day.dateString);
+  
+      if (index >= 0 && flatListRef.current) {
+        // 選択された日付にエントリーがある場合
+        flatListRef.current.scrollToIndex({
+          index, 
+          animated: true,
+          viewPosition: 0,
+        });
+        console.log("その日の日記あるよ。")
+      } else {
+        // 選択された日付より前のエントリーを探す
+        const previousEntries = entriesForCurrentMonth
+          .filter(entry => entry.date < day.dateString) // 選択された日付"未満"のデータをフィルター
+          .sort((a, b) => new Date(b.date) - new Date(a.date)); // 日付順で降順にソート
+          console.log("その日の日記ないからその直近の前の日の日記にスクロールするよ")
+        if (previousEntries.length > 0) {
+          // 最後のエントリーにスクロール
+          const lastIndex = entriesForCurrentMonth.indexOf(previousEntries[0]);
+          flatListRef.current.scrollToIndex({
+            index: lastIndex,
+            animated: true,
+            viewPosition: 0, // アイテムがリストの上部に来るように設定
+          });
+        } else {
+          console.log('No previous entries found.');
+          // 前のエントリーがない場合、スクロールしない
+          return;
+        }
+      }
     }
   };
+  
+
+
+
+
 
   // 月に含まれる週数を計算する関数
   const calculateWeeksInMonth = ({ year, month }) => {
@@ -416,14 +443,11 @@ const HomeScreen = ({ navigation, route }) => {
           <Text style={styles.emptyMessage}>該当月の日記はまだありません。</Text>
         }
         onScrollToIndexFailed={(info) => {
-          const offset = info.averageItemLength * info.index;
-          flatListRef.current?.scrollToOffset({ offset, animated: true });
-          setTimeout(() => {
-            if (flatListRef.current) {
-              flatListRef.current.scrollToEnd({ index: info.index, animated: true });
-            }
-          }, 100);
-        }}
+          const wait = new Promise(resolve => setTimeout(resolve, 500));
+          wait.then(() => {
+            flatListRef.current?.scrollToIndex({ index: info.index, animated: true });
+          });
+       }}
       />
 
     </View>
@@ -432,7 +456,7 @@ const HomeScreen = ({ navigation, route }) => {
 
 const styles = StyleSheet.create({
   container: {
-    // marginTop:50,
+    marginTop:50,
     flex: 1,
     backgroundColor: '#fff',
   },

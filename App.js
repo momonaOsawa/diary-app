@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import LoginScreen from './LoginScreen'; // 新しいLoginScreenをインポート
 import HomeScreen from './HomeScreen';
 import DiaryEditScreen from './DiaryEditScreen.js';
 import { AppRegistry } from 'react-native';
@@ -14,7 +15,8 @@ const Stack = createStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
+      <Stack.Navigator initialRouteName="LoginScreen">
+        <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
         <Stack.Screen name="DiaryEditScreen" component={DiaryEditScreen} options={{ title: '日記' }} />
       </Stack.Navigator>
