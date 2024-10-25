@@ -456,7 +456,7 @@ const HomeScreen = ({ navigation, route }) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginTop:50,
+    // marginTop:50,
     flex: 1,
     backgroundColor: '#fff',
   },
